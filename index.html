@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LPKIA Scholarship Rule Engine</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#050505;--card:#111214;--line:rgba(255,255,255,.08);--cy:#22D3EE;--am:#F59E0B;--tx:#F8FAFC;--mu:#71717A;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--mu);font-size:13px;margin-top:4px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--cy)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card.active{background:radial-gradient(circle at 0 0,rgba(6,182,212,.12),transparent 55%),var(--card)}
+.full{grid-column:1/-1}
+h2{font-size:14px;font-weight:600;margin:0 0 20px;display:flex;align-items:center;gap:10px}
+svg.i{width:18px;height:18px;fill:none;stroke:#D4D4D8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+label{display:block;font-size:13px;color:var(--mu);margin-bottom:6px}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+input,select{width:100%;font:inherit;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--tx);background:#0A0A0B;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+button{font:inherit;font-size:13px;color:var(--tx);background:transparent;border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer}
+button:hover{border-color:rgba(255,255,255,.22)}
+.pri{background:var(--cy);color:#050505;border-color:var(--cy);font-weight:600}
+.pri:hover{border-color:var(--cy);filter:brightness(1.08)}
+.res{margin-top:20px;border-top:1px solid var(--line);padding-top:20px;min-height:64px}
+.big{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.b1{background:rgba(34,211,238,.12);color:var(--cy);border:1px solid rgba(34,211,238,.35)}
+.b0{background:#18181B;color:var(--mu);border:1px solid var(--line)}
+.err{color:var(--am);font-size:13px}
+.hint{color:var(--mu);font-size:13px;line-height:1.6;margin:0 0 16px}
+.drop{border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.drop input{padding:8px;font-family:Inter,sans-serif;font-size:13px}
+.act{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.stat{display:flex;gap:32px;margin-bottom:16px;flex-wrap:wrap}
+.stat div{font-size:13px;color:var(--mu)}.stat b{display:block;font-size:20px;color:var(--tx);font-weight:500;font-family:'JetBrains Mono',monospace}
+.tw{overflow-x:auto;max-height:420px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:var(--card);text-align:left;color:var(--mu);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.rules{list-style:none;margin:0;padding:0}
+.rule{display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:12px 8px;border-top:1px solid var(--line);border-radius:8px}
+.rule:first-child{border-top:0}
+.rule.hit{background:rgba(34,211,238,.07);outline:1px solid rgba(34,211,238,.35)}
+.id{color:var(--am);font-size:12px}.cond{font-size:12.5px;line-height:1.7;color:#D4D4D8}.kw{color:var(--mu)}
+.hide{display:none}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:16px}.rule{grid-template-columns:36px 1fr}.rule .badge{grid-column:2;justify-self:start}}
+</style></head><body><div class="wrap">
+<header>
+ <div><h1>LPKIA Scholarship Rule Engine</h1><div class="sub">Uji kelayakan beasiswa dengan aturan IF-THEN dari Decision Tree</div></div>
+ <span class="pill mono" id="pill"></span>
+</header>
+<div class="grid">
+ <section class="card active" aria-labelledby="ha">
+  <h2 id="ha"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Uji satu pendaftar</h2>
+  <div class="f">
+   <div style="grid-column:1/-1"><label for="nm">Nama pendaftar</label><input id="nm" type="text" placeholder="Contoh: Ayu Lestari" style="font-family:Inter,sans-serif" autocomplete="off"></div>
+   <div><label for="ipk">IPK (2.00 – 4.00)</label><input id="ipk" type="number" step="0.01" min="2" max="4" value="3.40"></div>
+   <div><label for="inc">Penghasilan orang tua (juta Rp/bulan)</label><input id="inc" type="number" step="0.1" min="0" value="4.5"></div>
+   <div><label for="dep">Jumlah tanggungan (1 – 5)</label><input id="dep" type="number" step="1" min="1" max="5" value="3"></div>
+   <div><label for="org">Keaktifan organisasi</label><select id="org"><option value="0">Tidak aktif</option><option value="1" selected>Aktif</option><option value="2">Pengurus inti</option></select></div>
+  </div>
+  <button class="pri" id="go">Cek kelayakan</button>
+  <div class="res" id="res" aria-live="polite"></div>
+ </section>
+ <section class="card" aria-labelledby="hb">
+  <h2 id="hb"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Uji banyak pendaftar dari CSV</h2>
+  <p class="hint">Kolom wajib: <span class="mono">IPK, Penghasilan_Ortu, Jumlah_Tanggungan, Keaktifan_Organisasi</span>. Kolom <span class="mono">Nama</span> boleh ditambahkan. Pemisah koma atau titik koma.</p>
+  <div class="drop">
+   <input type="file" id="file" accept=".csv,text/csv" aria-label="Pilih file CSV">
+   <div class="err hide" id="ferr"></div>
+  </div>
+  <div class="act"><button id="tpl">Unduh contoh CSV</button></div>
+ </section>
+ <section class="card full hide" id="bc" aria-labelledby="hc">
+  <h2 id="hc"><svg class="i" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18M9 3v18"/></svg>Hasil pengujian CSV</h2>
+  <div class="stat" id="stat"></div>
+  <div class="tw"><table><thead><tr><th>#</th><th>Nama</th><th>IPK</th><th>Penghasilan</th><th>Tanggungan</th><th>Organisasi</th><th>Prediksi</th><th>P(Layak)</th><th>Aturan</th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="act"><button id="dl">Unduh hasil CSV</button></div>
+ </section>
+ <section class="card full" aria-labelledby="he">
+  <h2 id="he"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11H6v6M12 11h6v6"/></svg>Diagram pohon keputusan</h2>
+  <p class="hint">Cabang kiri berarti kondisi terpenuhi (≤), cabang kanan berarti tidak (&gt;). Jalur hasil uji satu pendaftar disorot cyan.</p>
+  <div class="tw" id="tree" style="max-height:none"></div>
+ </section>
+ <section class="card full" aria-labelledby="hd">
+  <h2 id="hd"><svg class="i" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Production rules <span class="mono" style="color:var(--mu);font-weight:400" id="cnt"></span></h2>
+  <ul class="rules" id="rl"></ul>
+ </section>
+</div></div>
+<script>
+const D={"criterion": "entropy", "max_depth": 4, "min_samples_leaf": 5, "root_entropy": 0.9898, "accuracy": 0.875, "n_rules": 13, "rules": [{"if": ["Penghasilan_Ortu <= 8.85", "IPK <= 3.30", "Penghasilan_Ortu <= 3.85", "IPK <= 2.75"], "then": "LAYAK", "probability": 0.71, "samples": 31}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK <= 3.30", "Penghasilan_Ortu <= 3.85", "IPK > 2.75"], "then": "LAYAK", "probability": 1.0, "samples": 18}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK <= 3.30", "Penghasilan_Ortu > 3.85", "IPK <= 2.82"], "then": "TIDAK LAYAK", "probability": 0.811, "samples": 37}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK <= 3.30", "Penghasilan_Ortu > 3.85", "IPK > 2.82"], "then": "LAYAK", "probability": 0.556, "samples": 27}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK > 3.30", "Penghasilan_Ortu <= 7.75"], "then": "LAYAK", "probability": 1.0, "samples": 51}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK > 3.30", "Penghasilan_Ortu > 7.75", "IPK <= 3.68"], "then": "LAYAK", "probability": 0.6, "samples": 5}, {"if": ["Penghasilan_Ortu <= 8.85", "IPK > 3.30", "Penghasilan_Ortu > 7.75", "IPK > 3.68"], "then": "LAYAK", "probability": 1.0, "samples": 7}, {"if": ["Penghasilan_Ortu > 8.85", "IPK <= 3.66", "Jumlah_Tanggungan <= 2.50"], "then": "TIDAK LAYAK", "probability": 1.0, "samples": 55}, {"if": ["Penghasilan_Ortu > 8.85", "IPK <= 3.66", "Jumlah_Tanggungan > 2.50", "Keaktifan_Organisasi <= 0.50"], "then": "TIDAK LAYAK", "probability": 1.0, "samples": 25}, {"if": ["Penghasilan_Ortu > 8.85", "IPK <= 3.66", "Jumlah_Tanggungan > 2.50", "Keaktifan_Organisasi > 0.50"], "then": "TIDAK LAYAK", "probability": 0.837, "samples": 43}, {"if": ["Penghasilan_Ortu > 8.85", "IPK > 3.66", "Keaktifan_Organisasi <= 0.50"], "then": "TIDAK LAYAK", "probability": 0.889, "samples": 9}, {"if": ["Penghasilan_Ortu > 8.85", "IPK > 3.66", "Keaktifan_Organisasi > 0.50", "Penghasilan_Ortu <= 11.75"], "then": "LAYAK", "probability": 1.0, "samples": 7}, {"if": ["Penghasilan_Ortu > 8.85", "IPK > 3.66", "Keaktifan_Organisasi > 0.50", "Penghasilan_Ortu > 11.75"], "then": "LAYAK", "probability": 0.6, "samples": 5}]};
+const $=i=>document.getElementById(i);
+const ORG=['Tidak aktif','Aktif','Pengurus inti'];
+$('pill').textContent=`criterion="${D.criterion}" · depth ${D.max_depth} · akurasi ${(D.accuracy*100).toFixed(1)}%`;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const KEY={IPK:'IPK',Penghasilan_Ortu:'Penghasilan_Ortu',Jumlah_Tanggungan:'Jumlah_Tanggungan',Keaktifan_Organisasi:'Keaktifan_Organisasi'};
+function predict(x){
+ for(let i=0;i<D.rules.length;i++){const r=D.rules[i];
+  const ok=r.if.every(c=>{const[m,f,op,v]=c.match(/^(\w+) (<=|>) ([\d.]+)$/);return op==='<='?x[f]<=+v:x[f]>+v});
+  if(ok){const l=r.then==='LAYAK';return{i,label:r.then,pl:l?r.probability:1-r.probability}}}
+ return null;
+}
+function check(x){
+ if(!(x.IPK>=2&&x.IPK<=4))return'IPK harus antara 2.00 dan 4.00.';
+ if(!(x.Penghasilan_Ortu>=0))return'Penghasilan orang tua harus berupa angka 0 atau lebih (dalam juta Rupiah).';
+ if(!(Number.isInteger(x.Jumlah_Tanggungan)&&x.Jumlah_Tanggungan>=1&&x.Jumlah_Tanggungan<=5))return'Jumlah tanggungan harus bilangan bulat 1 sampai 5.';
+ if(![0,1,2].includes(x.Keaktifan_Organisasi))return'Keaktifan organisasi harus 0, 1, atau 2.';
+ return null;
+}
+function buildTree(){
+ const root={};
+ D.rules.forEach((r,i)=>{let n=root;
+  r.if.forEach(c=>{const m=c.match(/^(\w+) (<=|>) ([\d.]+)$/);n.f=m[1];n.th=m[3];n.kids=n.kids||{};const s=m[2]==='<='?'L':'R';n=n.kids[s]=n.kids[s]||{}});
+  n.leaf=i});
+ return root;
+}
+function renderTree(hit){
+ const root=buildTree(),GX=140,GY=100,PAD=24;let lx=0,md=0;
+ (function lay(n,d){md=Math.max(md,d);n.y=d;
+  if(n.leaf!==undefined){n.x=lx++;n.lv=[n.leaf];return}
+  lay(n.kids.L,d+1);lay(n.kids.R,d+1);
+  n.x=(n.kids.L.x+n.kids.R.x)/2;n.lv=[...n.kids.L.lv,...n.kids.R.lv]})(root,0);
+ const W=lx*GX+PAD*2,H=(md+1)*GY+PAD*2-40;let ed='',nd='';
+ const px=n=>PAD+n.x*GX+GX/2,py=n=>PAD+n.y*GY;
+ (function draw(n){
+  const on=hit>=0&&n.lv.includes(hit),x=px(n),y=py(n);
+  if(n.kids)for(const s of['L','R']){const c=n.kids[s],cx=px(c),cy=py(c),co=hit>=0&&c.lv.includes(hit);
+   ed+=`<path d="M${x} ${y+38}C${x} ${y+68} ${cx} ${cy-30} ${cx} ${cy}" fill="none" stroke="${co?'#22D3EE':'rgba(255,255,255,.16)'}" stroke-width="${co?2:1.5}"/>`+
+   `<text x="${(x+cx)/2+(s==='L'?-10:10)}" y="${(y+38+cy)/2+3}" text-anchor="middle" font-size="11" fill="${co?'#22D3EE':'#71717A'}" font-family="JetBrains Mono,monospace">${s==='L'?'≤':'&gt;'}</text>`;draw(c)}
+  if(n.leaf!==undefined){const r=D.rules[n.leaf],l=r.then==='LAYAK',c=l?'#22D3EE':'#71717A';
+   nd+=`<g><rect x="${x-60}" y="${y}" width="120" height="44" rx="10" fill="${l?'rgba(34,211,238,.10)':'#18181B'}" stroke="${on?'#22D3EE':(l?'rgba(34,211,238,.35)':'rgba(255,255,255,.12)')}" stroke-width="${on?2:1}"/>`+
+   `<text x="${x}" y="${y+19}" text-anchor="middle" font-size="11" font-weight="600" fill="${c}" font-family="Inter,sans-serif">${r.then}</text>`+
+   `<text x="${x}" y="${y+34}" text-anchor="middle" font-size="10" fill="#71717A" font-family="JetBrains Mono,monospace">R${n.leaf+1} · ${(r.probability*100).toFixed(0)}% · n=${r.samples}</text></g>`;
+  }else{
+   nd+=`<g><rect x="${x-64}" y="${y}" width="128" height="38" rx="10" fill="#0A0A0B" stroke="${on?'#22D3EE':'rgba(255,255,255,.18)'}" stroke-width="${on?2:1}"/>`+
+   `<text x="${x}" y="${y+16}" text-anchor="middle" font-size="10.5" fill="#F8FAFC" font-family="JetBrains Mono,monospace">${n.f}</text>`+
+   `<text x="${x}" y="${y+30}" text-anchor="middle" font-size="10.5" fill="#F59E0B" font-family="JetBrains Mono,monospace">≤ ${n.th}</text></g>`}
+ })(root);
+ $('tree').innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram pohon keputusan">${ed}${nd}</svg>`;
+}
+function renderRules(hit){renderTree(hit);
+ $('cnt').textContent=D.rules.length+' aturan';
+ $('rl').innerHTML=D.rules.map((r,i)=>`<li class="rule${i===hit?' hit':''}" id="r${i}"><span class="id mono">R${i+1}</span>
+ <div class="cond mono"><span class="kw">IF</span> ${r.if.map(esc).join(' <span class="kw">AND</span> ')} <span class="kw">THEN</span></div>
+ <span class="badge ${r.then==='LAYAK'?'b1':'b0'}">${r.then}</span></li>`).join('');
+}
+$('go').onclick=()=>{
+ const x={IPK:+$('ipk').value,Penghasilan_Ortu:+$('inc').value,Jumlah_Tanggungan:+$('dep').value,Keaktifan_Organisasi:+$('org').value};
+ const e=check(x),R=$('res');
+ if($('ipk').value===''||$('inc').value===''||$('dep').value===''){R.innerHTML='<div class="err">Isi semua kolom terlebih dahulu.</div>';return}
+ if(e){R.innerHTML=`<div class="err">${e}</div>`;return}
+ const p=predict(x);renderRules(p.i);const nm=$('nm').value.trim();
+ R.innerHTML=`<div class="big">${nm?`<b style="font-weight:600">${esc(nm)}</b>`:''}<span class="badge ${p.label==='LAYAK'?'b1':'b0'}">${p.label}</span><span class="mono">P(Layak) ${(p.pl*100).toFixed(1)}%</span></div><div class="hint" style="margin:0">Cocok dengan aturan R${p.i+1} (disorot di daftar di bawah).</div>`;
+ $('r'+p.i).scrollIntoView({block:'nearest',behavior:'smooth'});
+};
+function parseCSV(t){
+ t=t.replace(/^\uFEFF/,'').trim();const lines=t.split(/\r?\n/).filter(l=>l.trim());
+ if(lines.length<2)throw new Error('File kosong atau hanya berisi header.');
+ const sep=(lines[0].match(/;/g)||[]).length>(lines[0].match(/,/g)||[]).length?';':',';
+ const cut=l=>l.split(sep).map(s=>s.trim().replace(/^"|"$/g,''));
+ const h=cut(lines[0]).map(s=>s.toLowerCase());
+ const idx={};for(const k in KEY){idx[k]=h.indexOf(k.toLowerCase());}
+ const miss=Object.keys(idx).filter(k=>idx[k]<0);
+ if(miss.length)throw new Error('Kolom tidak ditemukan: '+miss.join(', ')+'.');
+ const ni=h.indexOf('nama');
+ return lines.slice(1).map((l,n)=>{const c=cut(l);
+  const x={};for(const k in KEY)x[k]=+(c[idx[k]]||'').replace(',','.');
+  x.Nama=ni>=0?c[ni]:'';x.no=n+1;return x});
+}
+let OUT=[];
+$('file').onchange=async e=>{
+ const f=e.target.files[0],er=$('ferr');er.classList.add('hide');if(!f)return;
+ try{
+  const rows=parseCSV(await f.text());OUT=[];let bad=[];
+  rows.forEach(x=>{const m=check(x);if(m){bad.push(`Baris ${x.no}: ${m}`);return}
+   const p=predict(x);OUT.push({...x,label:p.label,pl:p.pl,rule:p.i+1})});
+  const lay=OUT.filter(o=>o.label==='LAYAK').length;
+  $('stat').innerHTML=`<div>Diproses<b>${OUT.length}</b></div><div>Layak<b>${lay}</b></div><div>Tidak layak<b>${OUT.length-lay}</b></div>`+(bad.length?`<div>Dilewati<b>${bad.length}</b></div>`:'');
+  $('tb').innerHTML=OUT.map(o=>`<tr><td>${o.no}</td><td>${esc(o.Nama||'-')}</td><td>${o.IPK}</td><td>${o.Penghasilan_Ortu}</td><td>${o.Jumlah_Tanggungan}</td><td>${ORG[o.Keaktifan_Organisasi]}</td><td><span class="badge ${o.label==='LAYAK'?'b1':'b0'}">${o.label}</span></td><td>${(o.pl*100).toFixed(1)}%</td><td>R${o.rule}</td></tr>`).join('');
+  $('bc').classList.remove('hide');
+  if(bad.length){er.textContent=bad.slice(0,3).join(' ')+(bad.length>3?` (+${bad.length-3} baris lain dilewati)`:'');er.classList.remove('hide')}
+  if(!OUT.length)throw new Error('Tidak ada baris valid. '+(bad[0]||''));
+ }catch(x){er.textContent=x.message;er.classList.remove('hide');$('bc').classList.add('hide')}
+};
+function save(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click()}
+$('tpl').onclick=()=>save('contoh_pendaftar.csv','Nama,IPK,Penghasilan_Ortu,Jumlah_Tanggungan,Keaktifan_Organisasi\nAyu,3.6,3.0,4,2\nBagas,2.4,12.0,1,0\nCitra,3.1,6.0,3,1\nDimas,3.8,10.5,2,2\n');
+$('dl').onclick=()=>save('hasil_prediksi.csv','Nama,IPK,Penghasilan_Ortu,Jumlah_Tanggungan,Keaktifan_Organisasi,Prediksi,P_Layak,Aturan\n'+OUT.map(o=>[o.Nama,o.IPK,o.Penghasilan_Ortu,o.Jumlah_Tanggungan,o.Keaktifan_Organisasi,o.label,o.pl.toFixed(3),'R'+o.rule].join(',')).join('\n'));
+renderRules(-1);
+</script></body></html>
